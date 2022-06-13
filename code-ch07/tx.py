@@ -162,19 +162,47 @@ class Tx:
         signed for index input_index'''
         # start the serialization with version
         # use int_to_little_endian in 4 bytes
+        modified_tx = int_to_little_endian(self.version, 4)
         # add how many inputs there are using encode_varint
+        modified_tx += encode_varint(len(self.tx_ins))
         # loop through each input using enumerate, so we have the input index
             # if the input index is the one we're signing
             # the previous tx's ScriptPubkey is the ScriptSig
             # Otherwise, the ScriptSig is empty
             # add the serialization of the input with the ScriptSig we want
+        for index, tx_in in enumerate(self.tx_ins):
+            if index == input_index:
+                modified_tx += TxIn(
+                        prev_tx = tx_in.prev_tx,
+                        prev_index = tx_in.prev_index,
+                        script_sig = tx_in.script_pubkey(self.testnet), #prev
+                        sequence = tx_in.sequence,
+                    ).serialize()
+            else:
+                modified_tx += TxIn(
+                    prev_tx=tx_in.prev_tx,
+                    prev_index=tx_in.prev_index,
+                    sequence=tx_in.sequence,
+                    ).serialize()
         # add how many outputs there are using encode_varint
+        modified_tx += encode_varint(len(self.tx_outs))
+
         # add the serialization of each output
+        for tx_out in self.tx_outs:
+            # serialize each output
+            modified_tx += tx_out.serialize()
+
         # add the locktime using int_to_little_endian in 4 bytes
+        modified_tx += int_to_little_endian(self.locktime, 4)
+
         # add SIGHASH_ALL using int_to_little_endian in 4 bytes
+        modified_tx += int_to_little_endian(SIGHASH_ALL, 4)
         # hash256 the serialization
+        h256 = hash256(modified_tx)
+
         # convert the result to an integer using int.from_bytes(x, 'big')
-        raise NotImplementedError
+        z = int.from_bytes(h256, 'big')
+        return z
 
     def verify_input(self, input_index):
         '''Returns whether the input has a valid signature'''
