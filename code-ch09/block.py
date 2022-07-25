@@ -92,14 +92,16 @@ class Block:
         '''Returns the block difficulty based on the bits'''
         # note difficulty is (target of lowest difficulty) / (self's target)
         # lowest difficulty has bits that equal 0xffff001d
-        raise NotImplementedError
+        return bits_to_target(self.bits)
 
     def check_pow(self):
         '''Returns whether this block satisfies proof of work'''
         # get the hash256 of the serialization of this block
+        ser = hash256(self.serialize())
         # interpret this hash as a little-endian number
+        proof = little_endian_to_int(ser)
         # return whether this integer is less than the target
-        raise NotImplementedError
+        return (proof < self.difficulty)
 
 
 class BlockTest(TestCase):

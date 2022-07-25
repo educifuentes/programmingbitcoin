@@ -122,16 +122,6 @@ def h160_to_p2sh_address(h160, testnet=False):
         prefix = b'\x05'
     return encode_base58_checksum(prefix + h160)
 
-
-def bits_to_target(bits):
-    '''Turns bits into a target (large 256-bit integer)'''
-    # last byte is exponent
-    # the first three bytes are the coefficient in little endian
-    # the formula is:
-    # coefficient * 256**(exponent-3)
-    raise NotImplementedError
-
-
 # tag::source1[]
 def target_to_bits(target):
     '''Turns a target integer back into bits'''
@@ -146,6 +136,13 @@ def target_to_bits(target):
     new_bits = coefficient[::-1] + bytes([exponent])  # <5>
     return new_bits
 # end::source1[]
+
+def bits_to_target(bits):
+    '''Turns bits into a target (large 256-bit integer)'''
+    exponent = bits[-1]
+    coefficient = little_endian_to_int(bits[:-1])
+    target = coefficient * 256**(exponent - 3)
+    return target
 
 
 def calculate_new_bits(previous_bits, time_differential):
