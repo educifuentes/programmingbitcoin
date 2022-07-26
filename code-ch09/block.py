@@ -8,7 +8,6 @@ from helper import (
     little_endian_to_int,
 )
 
-
 # tag::source1[]
 class Block:
 
@@ -91,17 +90,18 @@ class Block:
     def difficulty(self):
         '''Returns the block difficulty based on the bits'''
         # note difficulty is (target of lowest difficulty) / (self's target)
+        difficulty = (0xffff * 256**(0x1d-3)) / self.target()
         # lowest difficulty has bits that equal 0xffff001d
-        return bits_to_target(self.bits)
+        return difficulty
 
     def check_pow(self):
         '''Returns whether this block satisfies proof of work'''
         # get the hash256 of the serialization of this block
-        ser = hash256(self.serialize())
+        sha = hash256(self.serialize())
         # interpret this hash as a little-endian number
-        proof = little_endian_to_int(ser)
+        proof = little_endian_to_int(sha)
         # return whether this integer is less than the target
-        return (proof < self.difficulty)
+        return (proof < self.target())
 
 
 class BlockTest(TestCase):
